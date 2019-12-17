@@ -188,9 +188,9 @@ getinfo <- function(object, ...) UseMethod("getinfo")
 getinfo.xgb.DMatrix <- function(object, name, ...) {
   if (typeof(name) != "character" ||
       length(name) != 1 ||
-      !name %in% c('label', 'weight', 'base_margin', 'nrow')) {
+      !name %in% c('label', 'weight', 'base_margin', 'nrow', 'group', 'treatment')) {
     stop("getinfo: name must be one of the following\n",
-         "    'label', 'weight', 'base_margin', 'nrow'")
+         "    'label', 'weight', 'base_margin', 'nrow', 'group', 'treatment'")
   }
   if (name != "nrow"){
     ret <- .Call(XGDMatrixGetInfo_R, object, name)
@@ -258,6 +258,12 @@ setinfo.xgb.DMatrix <- function(object, name, info, ...) {
   if (name == "group") {
     if (sum(info) != nrow(object))
       stop("The sum of groups must equal to the number of rows in the input data")
+    .Call(XGDMatrixSetInfo_R, object, name, as.integer(info))
+    return(TRUE)
+  }
+   if (name == "treatment") {
+    if (length(info) != nrow(object))
+      stop("The length of treatment must equal to the number of rows in the input data")
     .Call(XGDMatrixSetInfo_R, object, name, as.integer(info))
     return(TRUE)
   }
@@ -350,6 +356,7 @@ print.xgb.DMatrix <- function(x, verbose = FALSE, ...) {
   if(length(getinfo(x, 'label')) > 0) infos <- 'label'
   if(length(getinfo(x, 'weight')) > 0) infos <- c(infos, 'weight')
   if(length(getinfo(x, 'base_margin')) > 0) infos <- c(infos, 'base_margin')
+  if(length(getinfo(x, 'treatment')) > 0) infos <- c(infos, 'treatment')
   if (length(infos) == 0) infos <- 'NA'
   cat(infos)
   cnames <- colnames(x)
